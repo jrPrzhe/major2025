@@ -643,6 +643,45 @@ async function renderChampionSelector() {
 
 // Note: saveChampion and resetChampion are now defined earlier in the file (after toggleChampionStatus)
 
+// Download database backup
+window.downloadDatabaseBackup = async function() {
+  console.log('[ADMIN] downloadDatabaseBackup called');
+  try {
+    const response = await fetch('/api/admin/backup');
+    if (!response.ok) {
+      throw new Error('Failed to download backup');
+    }
+    
+    // Get filename from Content-Disposition header or use default
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'database-backup.db';
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+      if (filenameMatch) {
+        filename = filenameMatch[1];
+      }
+    }
+    
+    // Download file
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    console.log('[ADMIN] Database backup downloaded successfully');
+    alert('✅ Резервная копия базы данных скачана! Сохраните этот файл в безопасном месте.');
+  } catch (error) {
+    console.error('[ADMIN] Error downloading backup:', error);
+    alert('❌ Ошибка при скачивании резервной копии: ' + error.message);
+  }
+};
+console.log('[ADMIN] downloadDatabaseBackup exported to window');
+
 // Initialize admin panel
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('[ADMIN] DOMContentLoaded - initializing admin panel');

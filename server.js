@@ -467,6 +467,31 @@ app.put('/api/admin/champion-status', (req, res) => {
 });
 
 // Serve index.html for root
+// Database backup/restore endpoints
+app.get('/api/admin/backup', (req, res) => {
+  try {
+    if (!fs.existsSync(dbPath)) {
+      return res.status(404).json({ error: 'Database file not found' });
+    }
+    
+    // Send database file as download
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="database-backup-${Date.now()}.db"`);
+    res.sendFile(dbPath);
+    console.log('[BACKUP] Database backup downloaded');
+  } catch (error) {
+    console.error('[BACKUP] Error creating backup:', error);
+    res.status(500).json({ error: 'Failed to create backup' });
+  }
+});
+
+// Note: Database restore should be done manually by:
+// 1. Downloading backup via /api/admin/backup
+// 2. Stopping server
+// 3. Replacing database.db file
+// 4. Restarting server
+// This is safer and avoids database connection issues
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
