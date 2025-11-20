@@ -107,6 +107,93 @@
     .back-link:hover {
       text-decoration: underline;
     }
+    
+    /* Responsive styles for admin */
+    @media (max-width: 768px) {
+      .admin-container {
+        padding: 15px;
+      }
+      
+      .admin-header h1 {
+        font-size: 1.5rem;
+      }
+      
+      .admin-password {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+      }
+      
+      .admin-password input {
+        width: 100%;
+        max-width: 100%;
+      }
+      
+      .admin-password button {
+        width: 100%;
+        max-width: 200px;
+        margin-left: 0;
+      }
+      
+      .stage-nav {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      
+      .stage-tab {
+        flex: 1;
+        min-width: 80px;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+      }
+      
+      .results-section {
+        padding: 15px;
+      }
+      
+      .results-section h3 {
+        font-size: 1.2rem;
+      }
+      
+      .result-category h4 {
+        font-size: 1rem;
+      }
+      
+      .result-slots {
+        gap: 8px;
+      }
+      
+      .result-slot {
+        min-width: 100%;
+        flex: 1;
+      }
+      
+      .save-results-btn {
+        width: 100%;
+        padding: 12px 20px;
+        font-size: 1rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .admin-header h1 {
+        font-size: 1.2rem;
+      }
+      
+      .stage-tab {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+      }
+      
+      .results-section {
+        padding: 12px;
+      }
+      
+      .result-slot {
+        padding: 12px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -213,4 +300,5 @@
   <script src="js/admin.js"></script>
 </body>
 </html>
+
 
