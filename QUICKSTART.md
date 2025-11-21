@@ -46,3 +46,5 @@ http://localhost:3000
 const ADMIN_PASSWORD = 'ваш_пароль';
 ```
 
+
+

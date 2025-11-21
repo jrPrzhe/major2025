@@ -90,3 +90,5 @@ async function setChampion() {
 // Запуск
 setChampion();
 
+
+

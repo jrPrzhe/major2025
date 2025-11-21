@@ -15,12 +15,22 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
 // Database setup
-const dbPath = path.join(__dirname, 'database.db');
+// Use persistent storage path if available (for Render Disk), otherwise use local path
+const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'database.db');
+console.log(`Database path: ${dbPath}`);
+
+// Ensure directory exists for database file
+const dbDir = path.dirname(dbPath);
+if (dbDir !== '.' && !fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+  console.log(`Created database directory: ${dbDir}`);
+}
+
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('Error opening database:', err);
   } else {
-    console.log('Connected to SQLite database');
+    console.log(`Connected to SQLite database at: ${dbPath}`);
     initDatabase();
   }
 });
