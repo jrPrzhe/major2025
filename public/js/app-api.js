@@ -575,6 +575,7 @@ function renderPicks(stageId) {
   const picks = players[activePlayer].picks[stageId] || {};
   const isExpired = isTimerExpired(stageId);
   const isClosed = !isStageOpen(stageId);
+  const isLocked = isExpired || isClosed;
 
   ['30', '03', '31-32'].forEach(category => {
     const slots = document.querySelectorAll(`#slots-${category}-${stageId} .slot`);
@@ -585,16 +586,17 @@ function renderPicks(stageId) {
       slot.classList.remove('locked', 'filled');
       slot.innerHTML = '';
 
-      if (isExpired || isClosed) {
+      if (isLocked) {
         slot.classList.add('locked');
-      } else {
-        if (teamName) {
-          slot.classList.add('filled');
-          slot.innerHTML = `
-            <div class="team-name">${teamName}</div>
-            <button class="remove-team" onclick="removeTeamFromSlot('${stageId}', '${slotKey}')">×</button>
-          `;
-        }
+      }
+
+      if (teamName) {
+        slot.classList.add('filled');
+        const canEdit = !isLocked;
+        slot.innerHTML = `
+          <div class="team-name">${teamName}</div>
+          ${canEdit ? `<button class="remove-team" onclick="removeTeamFromSlot('${stageId}', '${slotKey}')">×</button>` : ''}
+        `;
       }
     });
   });
