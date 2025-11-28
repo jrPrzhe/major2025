@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=0.75, maximum-scale=1.0, user-scalable=yes"/>
+  <title>Pick'Em Major CS2 — Ноябрь 2025</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <div class="header-top">
+      <span id="login-status">Выберите игрока для прогнозов</span>
+      <div class="header-actions">
+        <a href="admin.html" class="admin-link">🔐 Админ-панель</a>
+        <button class="export-btn" onclick="exportToJSON()">💾 Сохранить в JSON</button>
+        <label class="import-btn">
+          📤 Импорт JSON
+          <input type="file" accept=".json" onchange="importFromJSON(event)" style="display: none;">
+        </label>
+      </div>
+    </div>
+    <h1>🎯 Pick'Em Major CS2 — Ноябрь 2025</h1>
+  </header>
+
+  <nav class="stage-nav">
+    <button class="stage-tab active" data-stage="stage1">Stage 1</button>
+    <button class="stage-tab" data-stage="stage2">Stage 2</button>
+    <button class="stage-tab" data-stage="stage3">Stage 3</button>
+  </nav>
+
+  <div class="container">
+    <!-- Player Selection -->
+    <section id="player-select" class="player-section">
+      <h2>👤 Игроки</h2>
+      <div class="players">
+        <div class="player-card" data-player="dima">
+          <div class="player-name">Дима</div>
+          <button class="edit-nickname">✏️ Изменить</button>
+          <div class="score">Очки: <span class="score-value">10000</span></div>
+        </div>
+        <div class="player-card" data-player="evgeniy">
+          <div class="player-name">Евгений</div>
+          <button class="edit-nickname">✏️ Изменить</button>
+          <div class="score">Очки: <span class="score-value">10000</span></div>
+        </div>
+        <div class="player-card" data-player="zakhar">
+          <div class="player-name">Захар</div>
+          <button class="edit-nickname">✏️ Изменить</button>
+          <div class="score">Очки: <span class="score-value">10000</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stage Content -->
+    <section id="stage-content">
+      <!-- Stage 1 -->
+      <div class="stage active" id="stage1-content">
+        <div class="stage-header">
+          <h2>Stage 1</h2>
+        </div>
+        
+        <div class="instruction">
+          <p>Get five correct Pick'Em predictions</p>
+        </div>
+
+        <!-- Teams Row -->
+        <div class="teams-row" id="teams-stage1"></div>
+
+        <!-- Prediction Slots -->
+        <div class="prediction-slots">
+          <div class="slot-category advanced-30">
+            <h3>3:0 - ADVANCED</h3>
+            <div class="slots-container" id="slots-30-stage1">
+              <div class="slot" data-slot="0" data-category="30"></div>
+              <div class="slot" data-slot="1" data-category="30"></div>
+            </div>
+          </div>
+
+          <div class="slot-category eliminated-03">
+            <h3>0:3 - ELIMINATED</h3>
+            <div class="slots-container" id="slots-03-stage1">
+              <div class="slot" data-slot="0" data-category="03"></div>
+              <div class="slot" data-slot="1" data-category="03"></div>
+            </div>
+          </div>
+
+          <div class="slot-category advanced-31-32">
+            <h3>3:1 OR 3:2 ADVANCED</h3>
+            <div class="slots-container" id="slots-31-32-stage1">
+              <div class="slot" data-slot="0" data-category="31-32"></div>
+              <div class="slot" data-slot="1" data-category="31-32"></div>
+              <div class="slot" data-slot="2" data-category="31-32"></div>
+              <div class="slot" data-slot="3" data-category="31-32"></div>
+              <div class="slot" data-slot="4" data-category="31-32"></div>
+            </div>
+          </div>
+        </div>
+
+        <button class="save-picks-btn" id="save-stage1">💾 Сохранить прогнозы</button>
+      </div>
+
+      <!-- Stage 2 -->
+      <div class="stage" id="stage2-content">
+        <div class="stage-header">
+          <h2>Stage 2</h2>
+        </div>
+        
+        <div class="instruction">
+          <p>Get five correct Pick'Em predictions</p>
+        </div>
+
+        <!-- Teams Row -->
+        <div class="teams-row" id="teams-stage2"></div>
+
+        <!-- Prediction Slots -->
+        <div class="prediction-slots">
+          <div class="slot-category advanced-30">
+            <h3>3:0 - ADVANCED</h3>
+            <div class="slots-container" id="slots-30-stage2">
+              <div class="slot" data-slot="0" data-category="30"></div>
+              <div class="slot" data-slot="1" data-category="30"></div>
+            </div>
+          </div>
+
+          <div class="slot-category eliminated-03">
+            <h3>0:3 - ELIMINATED</h3>
+            <div class="slots-container" id="slots-03-stage2">
+              <div class="slot" data-slot="0" data-category="03"></div>
+              <div class="slot" data-slot="1" data-category="03"></div>
+            </div>
+          </div>
+
+          <div class="slot-category advanced-31-32">
+            <h3>3:1 OR 3:2 ADVANCED</h3>
+            <div class="slots-container" id="slots-31-32-stage2">
+              <div class="slot" data-slot="0" data-category="31-32"></div>
+              <div class="slot" data-slot="1" data-category="31-32"></div>
+              <div class="slot" data-slot="2" data-category="31-32"></div>
+              <div class="slot" data-slot="3" data-category="31-32"></div>
+              <div class="slot" data-slot="4" data-category="31-32"></div>
+            </div>
+          </div>
+        </div>
+
+        <button class="save-picks-btn" id="save-stage2">💾 Сохранить прогнозы</button>
+      </div>
+
+      <!-- Stage 3 -->
+      <div class="stage" id="stage3-content">
+        <div class="stage-header">
+          <h2>Stage 3</h2>
+        </div>
+        
+        <div class="instruction">
+          <p>Get five correct Pick'Em predictions</p>
+        </div>
+
+        <!-- Teams Row -->
+        <div class="teams-row" id="teams-stage3"></div>
+
+        <!-- Prediction Slots -->
+        <div class="prediction-slots">
+          <div class="slot-category advanced-30">
+            <h3>3:0 - ADVANCED</h3>
+            <div class="slots-container" id="slots-30-stage3">
+              <div class="slot" data-slot="0" data-category="30"></div>
+              <div class="slot" data-slot="1" data-category="30"></div>
+            </div>
+          </div>
+
+          <div class="slot-category eliminated-03">
+            <h3>0:3 - ELIMINATED</h3>
+            <div class="slots-container" id="slots-03-stage3">
+              <div class="slot" data-slot="0" data-category="03"></div>
+              <div class="slot" data-slot="1" data-category="03"></div>
+            </div>
+          </div>
+
+          <div class="slot-category advanced-31-32">
+            <h3>3:1 OR 3:2 ADVANCED</h3>
+            <div class="slots-container" id="slots-31-32-stage3">
+              <div class="slot" data-slot="0" data-category="31-32"></div>
+              <div class="slot" data-slot="1" data-category="31-32"></div>
+              <div class="slot" data-slot="2" data-category="31-32"></div>
+              <div class="slot" data-slot="3" data-category="31-32"></div>
+              <div class="slot" data-slot="4" data-category="31-32"></div>
+            </div>
+          </div>
+        </div>
+
+        <button class="save-picks-btn" id="save-stage3">💾 Сохранить прогнозы</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Team Selection Modal -->
+  <div id="team-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h3>Выберите команду</h3>
+      <div class="modal-teams" id="modal-teams"></div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
+

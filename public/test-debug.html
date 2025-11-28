@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Debug Test</title>
+</head>
+<body>
+  <h1>Debug Test Page</h1>
+  <button onclick="testFunctions()">Test Functions</button>
+  <div id="output"></div>
+  
+  <script src="js/api.js"></script>
+  <script src="js/admin-api.js"></script>
+  <script>
+    function testFunctions() {
+      const output = document.getElementById('output');
+      const tests = {
+        'api object': typeof api !== 'undefined',
+        'checkAdminPassword': typeof window.checkAdminPassword,
+        'showAdminStage': typeof window.showAdminStage,
+        'saveAdminResults': typeof window.saveAdminResults,
+        'resetAdminResults': typeof window.resetAdminResults,
+        'toggleStageStatus': typeof window.toggleStageStatus,
+        'toggleChampionStatus': typeof window.toggleChampionStatus,
+        'saveChampion': typeof window.saveChampion,
+        'resetChampion': typeof window.resetChampion
+      };
+      
+      let html = '<h2>Test Results:</h2><ul>';
+      for (const [name, result] of Object.entries(tests)) {
+        html += `<li>${name}: ${result}</li>`;
+      }
+      html += '</ul>';
+      output.innerHTML = html;
+      
+      console.log('Test results:', tests);
+    }
+    
+    // Auto-test on load
+    window.addEventListener('load', () => {
+      console.log('Page loaded, testing functions...');
+      setTimeout(testFunctions, 100);
+    });
+  </script>
+</body>
+</html>
+
+
+
