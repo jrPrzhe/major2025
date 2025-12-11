@@ -131,7 +131,7 @@ function initDefaultPlayers() {
 
 // Initialize stage status
 function initStageStatus() {
-  ['stage1', 'stage2', 'stage3'].forEach(stageId => {
+  ['stage1', 'stage2', 'stage3', 'stage4'].forEach(stageId => {
     db.run(`INSERT OR IGNORE INTO stage_status (stage_id, is_open) VALUES (?, 1)`,
       [stageId], (err) => {
         if (err) console.error('Error inserting stage status:', err);
@@ -197,6 +197,7 @@ app.get('/api/players/:id/picks', (req, res) => {
       stage1: {},
       stage2: {},
       stage3: {},
+      stage4: {},
       champion: {}
     };
     

@@ -49,10 +49,11 @@ const TEAMS_STAGE3 = [
 ];
 
 // Players data (loaded from API)
+// Initialize with empty picks - actual data will be loaded from API
 let players = {
-  dima: { name: "Дима", score: 10000, picks: { stage1: {}, stage2: {}, stage3: {} } },
-  evgeniy: { name: "Евгений", score: 10000, picks: { stage1: {}, stage2: {}, stage3: {} } },
-  zakhar: { name: "Захар", score: 10000, picks: { stage1: {}, stage2: {}, stage3: {} } }
+  dima: { name: "Дима", score: 10000, picks: { stage1: {}, stage2: {}, stage3: {}, stage4: {}, champion: {} } },
+  evgeniy: { name: "Евгений", score: 10000, picks: { stage1: {}, stage2: {}, stage3: {}, stage4: {}, champion: {} } },
+  zakhar: { name: "Захар", score: 10000, picks: { stage1: {}, stage2: {}, stage3: {}, stage4: {}, champion: {} } }
 };
 
 let activePlayer = null;
@@ -197,7 +198,7 @@ async function updateStageStatusCache() {
       stageStatusCache[status.stage_id] = status.is_open === 1;
     });
     // Set default for stages not in DB
-    ['stage1', 'stage2', 'stage3'].forEach(stageId => {
+    ['stage1', 'stage2', 'stage3', 'stage4'].forEach(stageId => {
       if (stageStatusCache[stageId] === undefined) {
         stageStatusCache[stageId] = true; // Default: open
       }
@@ -207,7 +208,7 @@ async function updateStageStatusCache() {
   } catch (error) {
     console.error('Error loading stage statuses:', error);
     // Default: all stages open
-    ['stage1', 'stage2', 'stage3'].forEach(stageId => {
+    ['stage1', 'stage2', 'stage3', 'stage4'].forEach(stageId => {
       stageStatusCache[stageId] = true;
     });
     updateVotingStatusBadges();
@@ -216,7 +217,7 @@ async function updateStageStatusCache() {
 
 // Update voting status badges
 function updateVotingStatusBadges() {
-  ['stage1', 'stage2', 'stage3'].forEach(stageId => {
+  ['stage1', 'stage2', 'stage3', 'stage4'].forEach(stageId => {
     const statusEl = document.getElementById(`voting-status-${stageId}`);
     if (statusEl) {
       const isOpen = isStageOpen(stageId);
@@ -264,15 +265,36 @@ async function loadPlayersFromAPI() {
         // Load picks
         try {
           const picks = await api.getPicks(playerData.id);
-          players[playerData.id].picks = picks || { stage1: {}, stage2: {}, stage3: {} };
+          
+          // Merge API picks with existing structure, preserving all existing data
+          // API picks take priority (they are the source of truth from database)
+          // But we ensure stage4 exists even if not in API response (for backward compatibility)
+          players[playerData.id].picks = {
+            stage1: picks?.stage1 || {},
+            stage2: picks?.stage2 || {},
+            stage3: picks?.stage3 || {},
+            stage4: picks?.stage4 || {}, // Will be empty {} if not in DB yet, which is fine
+            champion: picks?.champion || {}
+          };
           
           // Load champion pick (stored as pick with stageId='champion')
           const championPick = picks?.champion?.['champion-0'] || null;
           players[playerData.id].championPick = championPick;
         } catch (e) {
           console.error(`Error loading picks for ${playerData.id}:`, e);
-          players[playerData.id].picks = { stage1: {}, stage2: {}, stage3: {} };
-          players[playerData.id].championPick = null;
+          // On error, preserve existing structure but ensure stage4 exists
+          const existingPicks = players[playerData.id].picks || {};
+          players[playerData.id].picks = {
+            stage1: existingPicks.stage1 || {},
+            stage2: existingPicks.stage2 || {},
+            stage3: existingPicks.stage3 || {},
+            stage4: existingPicks.stage4 || {}, // Ensure stage4 exists
+            champion: existingPicks.champion || {}
+          };
+          // Preserve champion pick if it exists
+          if (existingPicks.champion?.['champion-0']) {
+            players[playerData.id].championPick = existingPicks.champion['champion-0'];
+          }
         }
       }
     }
@@ -494,6 +516,36 @@ async function getTeamsForStage(stageId) {
     });
     
     return [...advancedFromStage2, ...TEAMS_STAGE3];
+  } else if (stageId === 'stage4') {
+    // Stage 4 (Playoffs): прошедшие из Stage 3 + известные команды плейоф
+    const stage3Results = await getStageResults('stage3');
+    const advancedTeamNames = stage3Results ? [
+      ...(stage3Results['30'] || []),
+      ...(stage3Results['31-32'] || [])
+    ] : [];
+    
+    // Получаем команды Stage 3 для поиска логотипов
+    const stage3Teams = await getTeamsForStage('stage3');
+    
+    // Преобразуем названия команд в объекты команд
+    const advancedFromStage3 = advancedTeamNames.map(teamName => {
+      const team = stage3Teams.find(t => t.name === teamName);
+      return team || { name: teamName, logo: "placeholder.png" };
+    });
+    
+    // Известные команды плейоф
+    const TEAMS_PLAYOFFS = [
+      { name: "Spirit", logo: "placeholder.png" },
+      { name: "Falcons", logo: "placeholder.png" },
+      { name: "Vitality", logo: "placeholder.png" },
+      { name: "The MongolZ", logo: "placeholder.png" },
+      { name: "FURIA", logo: "placeholder.png" },
+      { name: "Natus Vincere", logo: "placeholder.png" },
+      { name: "MOUZ", logo: "placeholder.png" },
+      { name: "FaZe", logo: "placeholder.png" }
+    ];
+    
+    return [...advancedFromStage3, ...TEAMS_PLAYOFFS];
   }
   return [];
 }
@@ -523,13 +575,22 @@ async function getChampionResult() {
 
 // Update cache when results are loaded
 async function updateResultsCache() {
-  for (const stageId of ['stage1', 'stage2', 'stage3']) {
+  for (const stageId of ['stage1', 'stage2', 'stage3', 'stage4']) {
     const results = await getStageResults(stageId);
-    if (results && (results['30']?.length > 0 || results['03']?.length > 0 || results['31-32']?.length > 0)) {
-      stageResultsCache[stageId] = results;
+    if (stageId === 'stage4') {
+      // For playoffs, results are stored differently (by slot keys)
+      if (results && Object.keys(results).length > 0) {
+        stageResultsCache[stageId] = results;
+      } else {
+        delete stageResultsCache[stageId];
+      }
     } else {
-      // Clear cache if results are empty or null
-      delete stageResultsCache[stageId];
+      if (results && (results['30']?.length > 0 || results['03']?.length > 0 || results['31-32']?.length > 0)) {
+        stageResultsCache[stageId] = results;
+      } else {
+        // Clear cache if results are empty or null
+        delete stageResultsCache[stageId];
+      }
     }
   }
 }
@@ -567,7 +628,9 @@ function renderPicks(stageId) {
     document.querySelectorAll(`#${stageId}-content .slot`).forEach(slot => {
       slot.classList.add('locked');
       slot.classList.remove('filled');
-      slot.innerHTML = '';
+      if (!slot.querySelector('.slot-placeholder')) {
+        slot.innerHTML = '';
+      }
     });
     return;
   }
@@ -577,29 +640,69 @@ function renderPicks(stageId) {
   const isClosed = !isStageOpen(stageId);
   const isLocked = isExpired || isClosed;
 
-  ['30', '03', '31-32'].forEach(category => {
-    const slots = document.querySelectorAll(`#slots-${category}-${stageId} .slot`);
-    slots.forEach((slot, index) => {
-      const slotKey = `${category}-${index}`;
+  if (stageId === 'stage4') {
+    // Render playoffs bracket picks
+    const playoffSlots = [
+      'qf1-team1', 'qf1-team2', 'qf2-team1', 'qf2-team2',
+      'qf3-team1', 'qf3-team2', 'qf4-team1', 'qf4-team2',
+      'sf1-team1', 'sf1-team2', 'sf2-team1', 'sf2-team2',
+      'gf1-team1', 'gf1-team2'
+    ];
+    
+    playoffSlots.forEach(slotKey => {
+      const slot = document.querySelector(`#${stageId}-content .slot[data-slot="${slotKey}"]`);
+      if (!slot) return;
+      
       const teamName = picks[slotKey];
-
       slot.classList.remove('locked', 'filled');
-      slot.innerHTML = '';
-
+      
       if (isLocked) {
         slot.classList.add('locked');
-      }
-
-      if (teamName) {
-        slot.classList.add('filled');
-        const canEdit = !isLocked;
-        slot.innerHTML = `
-          <div class="team-name">${teamName}</div>
-          ${canEdit ? `<button class="remove-team" onclick="removeTeamFromSlot('${stageId}', '${slotKey}')">×</button>` : ''}
-        `;
+        if (teamName) {
+          slot.innerHTML = `<div class="team-name">${teamName}</div>`;
+        } else if (slot.querySelector('.slot-placeholder')) {
+          // Keep placeholder
+        } else {
+          slot.innerHTML = '';
+        }
+      } else {
+        if (teamName) {
+          slot.classList.add('filled');
+          slot.innerHTML = `
+            <div class="team-name">${teamName}</div>
+            <button class="remove-team" onclick="removeTeamFromSlot('${stageId}', '${slotKey}')">×</button>
+          `;
+        } else if (!slot.querySelector('.slot-placeholder')) {
+          slot.innerHTML = '';
+        }
       }
     });
-  });
+  } else {
+    // Render regular stage picks
+    ['30', '03', '31-32'].forEach(category => {
+      const slots = document.querySelectorAll(`#slots-${category}-${stageId} .slot`);
+      slots.forEach((slot, index) => {
+        const slotKey = `${category}-${index}`;
+        const teamName = picks[slotKey];
+
+        slot.classList.remove('locked', 'filled');
+        slot.innerHTML = '';
+
+        if (isLocked) {
+          slot.classList.add('locked');
+        }
+
+        if (teamName) {
+          slot.classList.add('filled');
+          const canEdit = !isLocked;
+          slot.innerHTML = `
+            <div class="team-name">${teamName}</div>
+            ${canEdit ? `<button class="remove-team" onclick="removeTeamFromSlot('${stageId}', '${slotKey}')">×</button>` : ''}
+          `;
+        }
+      });
+    });
+  }
 }
 
 // Select team for current slot
@@ -630,7 +733,8 @@ async function selectTeamForSlot(teamName) {
     return;
   }
 
-  const slotKey = `${category}-${slotIndex}`;
+  // For playoffs, use slotIndex directly as slotKey
+  const slotKey = (stageId === 'stage4') ? slotIndex : `${category}-${slotIndex}`;
 
   if (!players[activePlayer].picks[stageId]) {
     players[activePlayer].picks[stageId] = {};
@@ -648,8 +752,8 @@ async function selectTeamForSlot(teamName) {
         deletePickFromAPI(activePlayer, stageId, key).catch(() => {});
       }
     });
-  } else {
-    // Для остальных категорий проверяем дубликаты
+  } else if (stageId !== 'stage4') {
+    // Для остальных категорий (кроме плейоф) проверяем дубликаты
     const categorySlots = Object.keys(existingPicks).filter(key => key.startsWith(category));
     const isAlreadySelected = categorySlots.some(key => existingPicks[key] === teamName);
     
@@ -659,6 +763,7 @@ async function selectTeamForSlot(teamName) {
       return;
     }
   }
+  // Для плейоф (stage4) разрешаем одинаковые команды в разных матчах
 
   players[activePlayer].picks[stageId][slotKey] = teamName;
   
@@ -944,6 +1049,50 @@ async function updateScores() {
     });
   });
 
+  // Process playoffs (stage4) - +1000 for correct, -1000 for wrong
+  const stage4Results = stageResultsCache['stage4'];
+  if (stage4Results) {
+    console.log(`Processing results for stage4:`, stage4Results);
+
+    Object.keys(players).forEach(playerKey => {
+      const picks = players[playerKey].picks['stage4'] || {};
+      let correct = 0;
+      let wrong = 0;
+
+      // Check each playoff slot
+      const playoffSlots = [
+        'qf1-team1', 'qf1-team2', 'qf2-team1', 'qf2-team2',
+        'qf3-team1', 'qf3-team2', 'qf4-team1', 'qf4-team2',
+        'sf1-team1', 'sf1-team2', 'sf2-team1', 'sf2-team2',
+        'gf1-team1', 'gf1-team2'
+      ];
+
+      playoffSlots.forEach(slotKey => {
+        const playerPick = picks[slotKey];
+        const correctResult = stage4Results[slotKey];
+
+        if (playerPick && correctResult) {
+          if (playerPick === correctResult) {
+            correct++;
+          } else {
+            wrong++;
+          }
+        } else if (playerPick && !correctResult) {
+          // Player made a pick but admin hasn't set result yet - don't count
+        } else if (!playerPick && correctResult) {
+          // Admin set result but player didn't pick - count as wrong
+          wrong++;
+        }
+      });
+
+      // Add to score: +1000 for correct, -1000 for wrong
+      const points = (correct * 1000) - (wrong * 1000);
+      players[playerKey].score += points;
+      
+      console.log(`${playerKey} (playoffs): +${correct} correct, -${wrong} wrong, points: ${points}, total: ${players[playerKey].score}`);
+    });
+  }
+
   // Check champion pick (separate from stages)
   const championResult = await getChampionResult();
   if (championResult) {
@@ -992,6 +1141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const saveStage1 = document.getElementById('save-stage1');
   const saveStage2 = document.getElementById('save-stage2');
   const saveStage3 = document.getElementById('save-stage3');
+  const saveStage4 = document.getElementById('save-stage4');
   
   if (saveStage1) {
     saveStage1.addEventListener('click', () => savePicks('stage1'));
@@ -1001,6 +1151,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   if (saveStage3) {
     saveStage3.addEventListener('click', () => savePicks('stage3'));
+  }
+  if (saveStage4) {
+    saveStage4.addEventListener('click', () => savePicks('stage4'));
   }
 
   console.log('[APP] Calling init()...');

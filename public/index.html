@@ -21,6 +21,7 @@
     <button class="stage-tab active" data-stage="stage1">Stage 1</button>
     <button class="stage-tab" data-stage="stage2">Stage 2</button>
     <button class="stage-tab" data-stage="stage3">Stage 3</button>
+    <button class="stage-tab" data-stage="stage4">Playoffs</button>
   </nav>
 
   <div class="container">
@@ -224,6 +225,143 @@
         </div>
 
         <button class="save-picks-btn" id="save-stage3">💾 Сохранить прогнозы</button>
+      </div>
+
+      <!-- Stage 4 - Playoffs -->
+      <div class="stage" id="stage4-content">
+        <div class="stage-header">
+          <h2>Playoffs</h2>
+          <div class="stage-status-info">
+            <div class="timer" id="timer-stage4">
+              <span class="timer-label">До окончания приёма ставок:</span>
+              <span class="timer-value" id="timer-value-stage4">--:--:--</span>
+            </div>
+            <div class="voting-status" id="voting-status-stage4">
+              <span class="status-badge open">✅ Голосование открыто</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="instruction">
+          <p>Расставьте предикты на сетку плейоф. За каждый правильный предикт: +1000 очков, за неправильный: -1000 очков.</p>
+        </div>
+
+        <!-- Playoffs Bracket -->
+        <div class="playoffs-bracket">
+          <!-- Quarter-finals -->
+          <div class="bracket-round quarter-finals">
+            <h3>Quarter-finals (BO3)</h3>
+            <div class="bracket-matches">
+              <div class="bracket-match" data-match="qf1">
+                <div class="match-time">00:00 Friday</div>
+                <div class="match-teams">
+                  <div class="match-team slot" data-slot="qf1-team1" data-category="playoffs">
+                    <div class="team-name">Spirit</div>
+                  </div>
+                  <div class="match-vs">vs</div>
+                  <div class="match-team slot" data-slot="qf1-team2" data-category="playoffs">
+                    <div class="team-name">Falcons</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="bracket-match" data-match="qf2">
+                <div class="match-time">03:00 Friday</div>
+                <div class="match-teams">
+                  <div class="match-team slot" data-slot="qf2-team1" data-category="playoffs">
+                    <div class="team-name">Vitality</div>
+                  </div>
+                  <div class="match-vs">vs</div>
+                  <div class="match-team slot" data-slot="qf2-team2" data-category="playoffs">
+                    <div class="team-name">The MongolZ</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="bracket-match" data-match="qf3">
+                <div class="match-time">03:00 Saturday</div>
+                <div class="match-teams">
+                  <div class="match-team slot" data-slot="qf3-team1" data-category="playoffs">
+                    <div class="team-name">FURIA</div>
+                  </div>
+                  <div class="match-vs">vs</div>
+                  <div class="match-team slot" data-slot="qf3-team2" data-category="playoffs">
+                    <div class="team-name">Natus Vincere</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="bracket-match" data-match="qf4">
+                <div class="match-time">00:00 Saturday</div>
+                <div class="match-teams">
+                  <div class="match-team slot" data-slot="qf4-team1" data-category="playoffs">
+                    <div class="team-name">MOUZ</div>
+                  </div>
+                  <div class="match-vs">vs</div>
+                  <div class="match-team slot" data-slot="qf4-team2" data-category="playoffs">
+                    <div class="team-name">FaZe</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Semi-finals -->
+          <div class="bracket-round semi-finals">
+            <h3>Semi-finals (BO3)</h3>
+            <div class="bracket-matches">
+              <div class="bracket-match" data-match="sf1">
+                <div class="match-time">00:00 Sunday</div>
+                <div class="match-teams">
+                  <div class="match-team slot" data-slot="sf1-team1" data-category="playoffs">
+                    <div class="slot-placeholder">TBD</div>
+                  </div>
+                  <div class="match-vs">vs</div>
+                  <div class="match-team slot" data-slot="sf1-team2" data-category="playoffs">
+                    <div class="slot-placeholder">TBD</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="bracket-match" data-match="sf2">
+                <div class="match-time">03:00 Sunday</div>
+                <div class="match-teams">
+                  <div class="match-team slot" data-slot="sf2-team1" data-category="playoffs">
+                    <div class="slot-placeholder">TBD</div>
+                  </div>
+                  <div class="match-vs">vs</div>
+                  <div class="match-team slot" data-slot="sf2-team2" data-category="playoffs">
+                    <div class="slot-placeholder">TBD</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Grand final -->
+          <div class="bracket-round grand-final">
+            <h3>Grand final (BO5)</h3>
+            <div class="bracket-matches">
+              <div class="bracket-match" data-match="gf1">
+                <div class="match-time">01:00 Monday</div>
+                <div class="match-teams">
+                  <div class="match-team slot" data-slot="gf1-team1" data-category="playoffs">
+                    <div class="slot-placeholder">TBD</div>
+                  </div>
+                  <div class="match-vs">vs</div>
+                  <div class="match-team slot" data-slot="gf1-team2" data-category="playoffs">
+                    <div class="slot-placeholder">TBD</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Teams Row for Selection -->
+        <div class="teams-row" id="teams-stage4"></div>
+
+        <button class="save-picks-btn" id="save-stage4">💾 Сохранить прогнозы</button>
       </div>
     </section>
   </div>
