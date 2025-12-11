@@ -465,7 +465,9 @@
         'toggleStageStatus',
         'toggleChampionStatus',
         'saveChampion',
-        'resetChampion'
+        'resetChampion',
+        'downloadDatabaseBackup',
+        'restoreDatabase'
       ];
       
       const missing = requiredFunctions.filter(fn => typeof window[fn] !== 'function');
