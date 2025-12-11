@@ -496,6 +496,16 @@ app.get('/api/admin/backup', (req, res) => {
   }
 });
 
+// Restore database from backup
+app.post('/api/admin/restore', (req, res) => {
+  // This endpoint is for manual restore via file upload
+  // For security, you might want to add authentication here
+  res.json({ 
+    message: 'Database restore endpoint',
+    note: 'To restore: Stop server, replace database.db file, restart server'
+  });
+});
+
 // Note: Database restore should be done manually by:
 // 1. Downloading backup via /api/admin/backup
 // 2. Stopping server
