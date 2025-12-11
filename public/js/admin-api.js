@@ -682,6 +682,86 @@ window.downloadDatabaseBackup = async function() {
 };
 console.log('[ADMIN] downloadDatabaseBackup exported to window');
 
+// Restore database from backup - export to window
+window.restoreDatabase = async function() {
+  const fileInput = document.getElementById('restore-file-input');
+  const statusDiv = document.getElementById('restore-status');
+  
+  if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+    if (statusDiv) {
+      statusDiv.innerHTML = '<span style="color: #ff6b6b;">⚠️ Выберите файл для восстановления!</span>';
+    } else {
+      alert('⚠️ Выберите файл для восстановления!');
+    }
+    return;
+  }
+  
+  const file = fileInput.files[0];
+  
+  // Проверка расширения файла
+  if (!file.name.endsWith('.db') && !file.name.endsWith('.db_')) {
+    if (statusDiv) {
+      statusDiv.innerHTML = '<span style="color: #ff6b6b;">❌ Неверный формат файла! Выберите файл .db или .db_</span>';
+    } else {
+      alert('❌ Неверный формат файла! Выберите файл .db или .db_');
+    }
+    return;
+  }
+  
+  // Подтверждение
+  const confirmed = confirm(
+    '⚠️ ВНИМАНИЕ!\n\n' +
+    'Вы собираетесь восстановить базу данных из резервной копии.\n\n' +
+    'Это действие:\n' +
+    '• Заменит текущую базу данных\n' +
+    '• Автоматически создаст бэкап текущей базы перед восстановлением\n' +
+    '• Может занять несколько секунд\n\n' +
+    'Продолжить?'
+  );
+  
+  if (!confirmed) {
+    return;
+  }
+  
+  if (statusDiv) {
+    statusDiv.innerHTML = '<span style="color: #4ecdc4;">⏳ Восстановление базы данных...</span>';
+  }
+  
+  try {
+    const formData = new FormData();
+    formData.append('backup', file);
+    
+    const response = await fetch('/api/admin/restore', {
+      method: 'POST',
+      body: formData
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      if (statusDiv) {
+        statusDiv.innerHTML = '<span style="color: #4a9b3a;">✅ База данных успешно восстановлена!</span>';
+      }
+      alert('✅ База данных восстановлена!\n\nТекущая база сохранена как: ' + (result.backupFile || 'backup') + '\n\nРекомендуется перезагрузить страницу.');
+      fileInput.value = ''; // Очистить input
+      
+      // Перезагрузить страницу через 2 секунды
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } else {
+      throw new Error(result.error || 'Ошибка восстановления');
+    }
+  } catch (error) {
+    console.error('Error restoring database:', error);
+    if (statusDiv) {
+      statusDiv.innerHTML = '<span style="color: #ff6b6b;">❌ Ошибка при восстановлении: ' + error.message + '</span>';
+    }
+    alert('❌ Ошибка при восстановлении базы данных:\n' + error.message);
+  }
+};
+console.log('[ADMIN] restoreDatabase exported to window');
+
 // Initialize admin panel
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('[ADMIN] DOMContentLoaded - initializing admin panel');
@@ -697,7 +777,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     'toggleStageStatus',
     'toggleChampionStatus',
     'saveChampion',
-    'resetChampion'
+    'resetChampion',
+    'downloadDatabaseBackup',
+    'restoreDatabase'
   ];
   
   console.log('[ADMIN] Checking required functions...');
