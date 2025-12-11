@@ -418,12 +418,33 @@
           ⚠️ Важно: Регулярно делайте резервные копии базы данных!<br>
           Если сервер упадет, вы сможете восстановить все данные из резервной копии.
         </p>
-        <div style="display: flex; gap: 15px; justify-content: center;">
+        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
           <button class="save-results-btn" onclick="downloadDatabaseBackup()">💾 Скачать резервную копию</button>
         </div>
-        <p style="color: #888; font-size: 0.9rem; margin-top: 15px; text-align: center;">
-          Для восстановления: остановите сервер, замените файл database.db на скачанный, затем перезапустите сервер.
-        </p>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+          <h4 style="color: #4ecdc4; margin-bottom: 15px;">🔄 Восстановление базы данных</h4>
+          <p style="color: #ff6b6b; margin-bottom: 15px; font-weight: bold;">
+            ⚠️ ВНИМАНИЕ: Восстановление заменит текущую базу данных!<br>
+            Перед восстановлением автоматически будет создан бэкап текущей базы.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 15px; align-items: center;">
+            <input type="file" id="restore-file-input" accept=".db,.db_" style="
+              padding: 10px;
+              background: #14101d;
+              color: white;
+              border: 2px dashed #4ecdc4;
+              border-radius: 8px;
+              cursor: pointer;
+              width: 100%;
+              max-width: 400px;
+            ">
+            <button class="save-results-btn" onclick="restoreDatabase()" style="background: #ff6b6b;">
+              🔄 Восстановить базу данных
+            </button>
+            <div id="restore-status" style="margin-top: 10px; text-align: center; min-height: 20px;"></div>
+          </div>
+        </div>
       </div>
 
       <a href="index.html" class="back-link">← Вернуться на главную</a>
