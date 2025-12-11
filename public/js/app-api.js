@@ -1061,7 +1061,10 @@ async function openTeamModal(stageId) {
   } else if (stageId === 'stage4' && currentSlot && currentSlot.slotIndex) {
     // Для плейоф: если выбираем победителя QF, показываем только команды этого матча
     const slotKey = currentSlot.slotIndex;
+    const picks = players[activePlayer].picks[stageId] || {};
+    
     if (slotKey.startsWith('qf') && slotKey.endsWith('-winner')) {
+      // QF: показываем только команды этого матча
       const matchTeams = {
         'qf1-winner': ['Spirit', 'Falcons'],
         'qf2-winner': ['Vitality', 'The MongolZ'],
@@ -1074,8 +1077,44 @@ async function openTeamModal(stageId) {
         name: teamName,
         logo: 'placeholder.png'
       }));
+    } else if (slotKey === 'sf1-winner') {
+      // SF1: показываем только победителей QF1 и QF2
+      const qf1Winner = picks['qf1-winner'];
+      const qf2Winner = picks['qf2-winner'];
+      const availableTeams = [];
+      if (qf1Winner) availableTeams.push(qf1Winner);
+      if (qf2Winner) availableTeams.push(qf2Winner);
+      
+      teams = availableTeams.map(teamName => ({
+        name: teamName,
+        logo: 'placeholder.png'
+      }));
+    } else if (slotKey === 'sf2-winner') {
+      // SF2: показываем только победителей QF3 и QF4
+      const qf3Winner = picks['qf3-winner'];
+      const qf4Winner = picks['qf4-winner'];
+      const availableTeams = [];
+      if (qf3Winner) availableTeams.push(qf3Winner);
+      if (qf4Winner) availableTeams.push(qf4Winner);
+      
+      teams = availableTeams.map(teamName => ({
+        name: teamName,
+        logo: 'placeholder.png'
+      }));
+    } else if (slotKey === 'gf1-winner') {
+      // GF: показываем только победителей SF1 и SF2
+      const sf1Winner = picks['sf1-winner'];
+      const sf2Winner = picks['sf2-winner'];
+      const availableTeams = [];
+      if (sf1Winner) availableTeams.push(sf1Winner);
+      if (sf2Winner) availableTeams.push(sf2Winner);
+      
+      teams = availableTeams.map(teamName => ({
+        name: teamName,
+        logo: 'placeholder.png'
+      }));
     } else {
-      // Для SF и GF показываем все команды плейоф
+      // Для остальных слотов (sf1-team1, sf1-team2 и т.д.) показываем все команды плейоф
       teams = await getTeamsForStage(stageId);
     }
   } else {
@@ -1083,17 +1122,40 @@ async function openTeamModal(stageId) {
   }
 
   modalTeams.innerHTML = '';
-  teams.forEach(team => {
-    const teamEl = document.createElement('div');
-    teamEl.className = 'modal-team';
-    teamEl.innerHTML = `
-      <img src="${team.logo}" alt="${team.name}" 
-           onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'60\\' height=\\'60\\'%3E%3Crect fill=\\'%23333\\' width=\\'60\\' height=\\'60\\'/%3E%3Ctext fill=\\'%23999\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' font-size=\\'10\\'%3E${team.name.substring(0, 3)}%3C/text%3E%3C/svg%3E'">
-      <div class="team-name">${team.name}</div>
-    `;
-    teamEl.addEventListener('click', () => selectTeamForSlot(team.name));
-    modalTeams.appendChild(teamEl);
-  });
+  
+  if (teams.length === 0) {
+    // Если нет доступных команд (например, не выбраны победители предыдущих раундов)
+    const noTeamsMsg = document.createElement('div');
+    noTeamsMsg.className = 'no-teams-message';
+    noTeamsMsg.style.cssText = 'text-align: center; padding: 20px; color: var(--text-muted);';
+    
+    if (currentSlot && currentSlot.slotIndex) {
+      const slotKey = currentSlot.slotIndex;
+      if (slotKey === 'sf1-winner' || slotKey === 'sf2-winner') {
+        noTeamsMsg.textContent = '⚠️ Сначала выберите победителей в четвертьфиналах!';
+      } else if (slotKey === 'gf1-winner') {
+        noTeamsMsg.textContent = '⚠️ Сначала выберите победителей в полуфиналах!';
+      } else {
+        noTeamsMsg.textContent = '⚠️ Нет доступных команд';
+      }
+    } else {
+      noTeamsMsg.textContent = '⚠️ Нет доступных команд';
+    }
+    
+    modalTeams.appendChild(noTeamsMsg);
+  } else {
+    teams.forEach(team => {
+      const teamEl = document.createElement('div');
+      teamEl.className = 'modal-team';
+      teamEl.innerHTML = `
+        <img src="${team.logo}" alt="${team.name}" 
+             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'60\\' height=\\'60\\'%3E%3Crect fill=\\'%23333\\' width=\\'60\\' height=\\'60\\'/%3E%3Ctext fill=\\'%23999\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' font-size=\\'10\\'%3E${team.name.substring(0, 3)}%3C/text%3E%3C/svg%3E'">
+        <div class="team-name">${team.name}</div>
+      `;
+      teamEl.addEventListener('click', () => selectTeamForSlot(team.name));
+      modalTeams.appendChild(teamEl);
+    });
+  }
 
   modal.classList.add('active');
 }
