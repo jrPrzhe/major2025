@@ -461,7 +461,7 @@ app.post('/api/admin/champion', (req, res) => {
 // Delete champion result
 app.delete('/api/admin/champion', (req, res) => {
   const currentDb = getDb();
-  currentDb.run('DELETE FROM champion', function(err) => {
+  currentDb.run('DELETE FROM champion', function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
       return;
