@@ -642,14 +642,9 @@ function renderPicks(stageId) {
 
   if (stageId === 'stage4') {
     // Render playoffs bracket picks
-    const playoffSlots = [
-      'qf1-team1', 'qf1-team2', 'qf2-team1', 'qf2-team2',
-      'qf3-team1', 'qf3-team2', 'qf4-team1', 'qf4-team2',
-      'sf1-team1', 'sf1-team2', 'sf2-team1', 'sf2-team2',
-      'gf1-team1', 'gf1-team2'
-    ];
-    
-    playoffSlots.forEach(slotKey => {
+    // Quarter-finals winners
+    const qfWinners = ['qf1-winner', 'qf2-winner', 'qf3-winner', 'qf4-winner'];
+    qfWinners.forEach(slotKey => {
       const slot = document.querySelector(`#${stageId}-content .slot[data-slot="${slotKey}"]`);
       if (!slot) return;
       
@@ -660,10 +655,8 @@ function renderPicks(stageId) {
         slot.classList.add('locked');
         if (teamName) {
           slot.innerHTML = `<div class="team-name">${teamName}</div>`;
-        } else if (slot.querySelector('.slot-placeholder')) {
-          // Keep placeholder
         } else {
-          slot.innerHTML = '';
+          slot.innerHTML = '<div class="slot-placeholder">Выберите победителя</div>';
         }
       } else {
         if (teamName) {
@@ -672,11 +665,153 @@ function renderPicks(stageId) {
             <div class="team-name">${teamName}</div>
             <button class="remove-team" onclick="removeTeamFromSlot('${stageId}', '${slotKey}')">×</button>
           `;
-        } else if (!slot.querySelector('.slot-placeholder')) {
-          slot.innerHTML = '';
+        } else {
+          slot.innerHTML = '<div class="slot-placeholder">Выберите победителя</div>';
         }
       }
     });
+    
+    // Auto-fill semi-finals based on quarter-finals winners
+    // QF1 winner → SF1 team1, QF2 winner → SF1 team2
+    // QF3 winner → SF2 team1, QF4 winner → SF2 team2
+    const qfToSfMapping = {
+      'qf1-winner': 'sf1-team1',
+      'qf2-winner': 'sf1-team2',
+      'qf3-winner': 'sf2-team1',
+      'qf4-winner': 'sf2-team2'
+    };
+    
+    Object.keys(qfToSfMapping).forEach(qfSlot => {
+      const sfSlot = qfToSfMapping[qfSlot];
+      const qfWinner = picks[qfSlot];
+      const sfSlotEl = document.querySelector(`#${stageId}-content .slot[data-slot="${sfSlot}"]`);
+      
+      if (sfSlotEl && qfWinner) {
+        // Auto-fill semi-final slot
+        if (!picks[sfSlot] || picks[sfSlot] !== qfWinner) {
+          players[activePlayer].picks[stageId][sfSlot] = qfWinner;
+        }
+        
+        // Render semi-final slot
+        sfSlotEl.classList.remove('locked', 'filled');
+        if (isLocked) {
+          sfSlotEl.classList.add('locked');
+          sfSlotEl.innerHTML = `<div class="team-name">${qfWinner}</div>`;
+        } else {
+          sfSlotEl.classList.add('filled');
+          sfSlotEl.innerHTML = `
+            <div class="team-name">${qfWinner}</div>
+            <button class="remove-team" onclick="removeTeamFromSlot('${stageId}', '${sfSlot}')">×</button>
+          `;
+        }
+      } else if (sfSlotEl && !qfWinner) {
+        // Clear semi-final slot if quarter-final winner is removed
+        if (picks[sfSlot]) {
+          delete players[activePlayer].picks[stageId][sfSlot];
+        }
+        sfSlotEl.classList.remove('filled');
+        if (!isLocked) {
+          sfSlotEl.innerHTML = '<div class="slot-placeholder">TBD</div>';
+        }
+      }
+    });
+    
+    // Semi-finals winners (manual selection)
+    const sfWinners = ['sf1-winner', 'sf2-winner'];
+    sfWinners.forEach(slotKey => {
+      const slot = document.querySelector(`#${stageId}-content .slot[data-slot="${slotKey}"]`);
+      if (!slot) return;
+      
+      const teamName = picks[slotKey];
+      slot.classList.remove('locked', 'filled');
+      
+      if (isLocked) {
+        slot.classList.add('locked');
+        if (teamName) {
+          slot.innerHTML = `<div class="team-name">${teamName}</div>`;
+        } else {
+          slot.innerHTML = '<div class="slot-placeholder">Выберите победителя</div>';
+        }
+      } else {
+        if (teamName) {
+          slot.classList.add('filled');
+          slot.innerHTML = `
+            <div class="team-name">${teamName}</div>
+            <button class="remove-team" onclick="removeTeamFromSlot('${stageId}', '${slotKey}')">×</button>
+          `;
+        } else {
+          slot.innerHTML = '<div class="slot-placeholder">Выберите победителя</div>';
+        }
+      }
+    });
+    
+    // Auto-fill grand final based on semi-finals winners
+    // SF1 winner → GF1 team1, SF2 winner → GF1 team2
+    const sfToGfMapping = {
+      'sf1-winner': 'gf1-team1',
+      'sf2-winner': 'gf1-team2'
+    };
+    
+    Object.keys(sfToGfMapping).forEach(sfSlot => {
+      const gfSlot = sfToGfMapping[sfSlot];
+      const sfWinner = picks[sfSlot];
+      const gfSlotEl = document.querySelector(`#${stageId}-content .slot[data-slot="${gfSlot}"]`);
+      
+      if (gfSlotEl && sfWinner) {
+        // Auto-fill grand final slot
+        if (!picks[gfSlot] || picks[gfSlot] !== sfWinner) {
+          players[activePlayer].picks[stageId][gfSlot] = sfWinner;
+        }
+        
+        // Render grand final slot
+        gfSlotEl.classList.remove('locked', 'filled');
+        if (isLocked) {
+          gfSlotEl.classList.add('locked');
+          gfSlotEl.innerHTML = `<div class="team-name">${sfWinner}</div>`;
+        } else {
+          gfSlotEl.classList.add('filled');
+          gfSlotEl.innerHTML = `
+            <div class="team-name">${sfWinner}</div>
+            <button class="remove-team" onclick="removeTeamFromSlot('${stageId}', '${gfSlot}')">×</button>
+          `;
+        }
+      } else if (gfSlotEl && !sfWinner) {
+        // Clear grand final slot if semi-final winner is removed
+        if (picks[gfSlot]) {
+          delete players[activePlayer].picks[stageId][gfSlot];
+        }
+        gfSlotEl.classList.remove('filled');
+        if (!isLocked) {
+          gfSlotEl.innerHTML = '<div class="slot-placeholder">TBD</div>';
+        }
+      }
+    });
+    
+    // Grand final winner (manual selection)
+    const gfWinnerSlot = document.querySelector(`#${stageId}-content .slot[data-slot="gf1-winner"]`);
+    if (gfWinnerSlot) {
+      const gfWinner = picks['gf1-winner'];
+      gfWinnerSlot.classList.remove('locked', 'filled');
+      
+      if (isLocked) {
+        gfWinnerSlot.classList.add('locked');
+        if (gfWinner) {
+          gfWinnerSlot.innerHTML = `<div class="team-name">${gfWinner}</div>`;
+        } else {
+          gfWinnerSlot.innerHTML = '<div class="slot-placeholder">Выберите победителя</div>';
+        }
+      } else {
+        if (gfWinner) {
+          gfWinnerSlot.classList.add('filled');
+          gfWinnerSlot.innerHTML = `
+            <div class="team-name">${gfWinner}</div>
+            <button class="remove-team" onclick="removeTeamFromSlot('${stageId}', 'gf1-winner')">×</button>
+          `;
+        } else {
+          gfWinnerSlot.innerHTML = '<div class="slot-placeholder">Выберите победителя</div>';
+        }
+      }
+    }
   } else {
     // Render regular stage picks
     ['30', '03', '31-32'].forEach(category => {
@@ -752,8 +887,26 @@ async function selectTeamForSlot(teamName) {
         deletePickFromAPI(activePlayer, stageId, key).catch(() => {});
       }
     });
-  } else if (stageId !== 'stage4') {
-    // Для остальных категорий (кроме плейоф) проверяем дубликаты
+  } else if (stageId === 'stage4') {
+    // Для плейоф: проверяем, что выбранная команда соответствует матчу
+    if (slotKey.startsWith('qf') && slotKey.endsWith('-winner')) {
+      // Проверяем, что выбранная команда участвует в этом матче
+      const matchId = slotKey.replace('-winner', '');
+      const matchTeams = {
+        'qf1': ['Spirit', 'Falcons'],
+        'qf2': ['Vitality', 'The MongolZ'],
+        'qf3': ['FURIA', 'Natus Vincere'],
+        'qf4': ['MOUZ', 'FaZe']
+      };
+      
+      if (matchTeams[matchId] && !matchTeams[matchId].includes(teamName)) {
+        alert(`⚠️ Команда ${teamName} не участвует в этом матче! Выберите одну из команд: ${matchTeams[matchId].join(' или ')}`);
+        closeModal();
+        return;
+      }
+    }
+  } else {
+    // Для остальных категорий проверяем дубликаты
     const categorySlots = Object.keys(existingPicks).filter(key => key.startsWith(category));
     const isAlreadySelected = categorySlots.some(key => existingPicks[key] === teamName);
     
@@ -763,12 +916,51 @@ async function selectTeamForSlot(teamName) {
       return;
     }
   }
-  // Для плейоф (stage4) разрешаем одинаковые команды в разных матчах
 
   players[activePlayer].picks[stageId][slotKey] = teamName;
   
+  // Auto-fill semi-finals and grand final for playoffs
+  if (stageId === 'stage4') {
+    // QF winners → SF teams
+    if (slotKey === 'qf1-winner') {
+      players[activePlayer].picks[stageId]['sf1-team1'] = teamName;
+    } else if (slotKey === 'qf2-winner') {
+      players[activePlayer].picks[stageId]['sf1-team2'] = teamName;
+    } else if (slotKey === 'qf3-winner') {
+      players[activePlayer].picks[stageId]['sf2-team1'] = teamName;
+    } else if (slotKey === 'qf4-winner') {
+      players[activePlayer].picks[stageId]['sf2-team2'] = teamName;
+    }
+    
+    // SF winners → GF teams
+    if (slotKey === 'sf1-winner') {
+      players[activePlayer].picks[stageId]['gf1-team1'] = teamName;
+    } else if (slotKey === 'sf2-winner') {
+      players[activePlayer].picks[stageId]['gf1-team2'] = teamName;
+    }
+  }
+  
   try {
     await savePickToAPI(activePlayer, stageId, slotKey, teamName);
+    
+    // Auto-save related slots for playoffs
+    if (stageId === 'stage4') {
+      // Save auto-filled SF and GF slots
+      if (slotKey === 'qf1-winner') {
+        await savePickToAPI(activePlayer, stageId, 'sf1-team1', teamName).catch(() => {});
+      } else if (slotKey === 'qf2-winner') {
+        await savePickToAPI(activePlayer, stageId, 'sf1-team2', teamName).catch(() => {});
+      } else if (slotKey === 'qf3-winner') {
+        await savePickToAPI(activePlayer, stageId, 'sf2-team1', teamName).catch(() => {});
+      } else if (slotKey === 'qf4-winner') {
+        await savePickToAPI(activePlayer, stageId, 'sf2-team2', teamName).catch(() => {});
+      } else if (slotKey === 'sf1-winner') {
+        await savePickToAPI(activePlayer, stageId, 'gf1-team1', teamName).catch(() => {});
+      } else if (slotKey === 'sf2-winner') {
+        await savePickToAPI(activePlayer, stageId, 'gf1-team2', teamName).catch(() => {});
+      }
+    }
+    
     renderPicks(stageId);
     updateSaveButton(stageId);
     currentSlot = null;
@@ -866,6 +1058,26 @@ async function openTeamModal(stageId) {
   let teams;
   if (currentSlot && currentSlot.category === 'champion') {
     teams = await getTeamsForStage('stage3');
+  } else if (stageId === 'stage4' && currentSlot && currentSlot.slotIndex) {
+    // Для плейоф: если выбираем победителя QF, показываем только команды этого матча
+    const slotKey = currentSlot.slotIndex;
+    if (slotKey.startsWith('qf') && slotKey.endsWith('-winner')) {
+      const matchTeams = {
+        'qf1-winner': ['Spirit', 'Falcons'],
+        'qf2-winner': ['Vitality', 'The MongolZ'],
+        'qf3-winner': ['FURIA', 'Natus Vincere'],
+        'qf4-winner': ['MOUZ', 'FaZe']
+      };
+      
+      const availableTeams = matchTeams[slotKey] || [];
+      teams = availableTeams.map(teamName => ({
+        name: teamName,
+        logo: 'placeholder.png'
+      }));
+    } else {
+      // Для SF и GF показываем все команды плейоф
+      teams = await getTeamsForStage(stageId);
+    }
   } else {
     teams = await getTeamsForStage(stageId);
   }
@@ -912,6 +1124,33 @@ async function removeTeamFromSlot(stageId, slotKey) {
     try {
       await deletePickFromAPI(activePlayer, stageId, slotKey);
       delete players[activePlayer].picks[stageId][slotKey];
+      
+      // For playoffs: if removing QF winner, also remove corresponding SF team
+      if (stageId === 'stage4') {
+        if (slotKey === 'qf1-winner') {
+          delete players[activePlayer].picks[stageId]['sf1-team1'];
+          await deletePickFromAPI(activePlayer, stageId, 'sf1-team1').catch(() => {});
+        } else if (slotKey === 'qf2-winner') {
+          delete players[activePlayer].picks[stageId]['sf1-team2'];
+          await deletePickFromAPI(activePlayer, stageId, 'sf1-team2').catch(() => {});
+        } else if (slotKey === 'qf3-winner') {
+          delete players[activePlayer].picks[stageId]['sf2-team1'];
+          await deletePickFromAPI(activePlayer, stageId, 'sf2-team1').catch(() => {});
+        } else if (slotKey === 'qf4-winner') {
+          delete players[activePlayer].picks[stageId]['sf2-team2'];
+          await deletePickFromAPI(activePlayer, stageId, 'sf2-team2').catch(() => {});
+        }
+        
+        // If removing SF winner, also remove corresponding GF team
+        if (slotKey === 'sf1-winner') {
+          delete players[activePlayer].picks[stageId]['gf1-team1'];
+          await deletePickFromAPI(activePlayer, stageId, 'gf1-team1').catch(() => {});
+        } else if (slotKey === 'sf2-winner') {
+          delete players[activePlayer].picks[stageId]['gf1-team2'];
+          await deletePickFromAPI(activePlayer, stageId, 'gf1-team2').catch(() => {});
+        }
+      }
+      
       renderPicks(stageId);
       updateSaveButton(stageId);
     } catch (error) {
@@ -1059,12 +1298,11 @@ async function updateScores() {
       let correct = 0;
       let wrong = 0;
 
-      // Check each playoff slot
+      // Check each playoff slot (winners only, as teams are fixed)
       const playoffSlots = [
-        'qf1-team1', 'qf1-team2', 'qf2-team1', 'qf2-team2',
-        'qf3-team1', 'qf3-team2', 'qf4-team1', 'qf4-team2',
-        'sf1-team1', 'sf1-team2', 'sf2-team1', 'sf2-team2',
-        'gf1-team1', 'gf1-team2'
+        'qf1-winner', 'qf2-winner', 'qf3-winner', 'qf4-winner',
+        'sf1-winner', 'sf2-winner',
+        'gf1-winner'
       ];
 
       playoffSlots.forEach(slotKey => {
